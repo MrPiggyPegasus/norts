@@ -1,4 +1,3 @@
-
 /*
  Copyright (c) 2023. "MrPiggyPegasus"
  This file is part of the "norts" Noughts and Crosses engine, see https://github.com/MrPiggyPegasus/norts.
@@ -19,6 +18,7 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
+
 
 mod board;
 mod search;
