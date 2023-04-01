@@ -1,23 +1,23 @@
 /*
- Copyright (c) 2023. "MrPiggyPegasus"
- This file is part of the "norts" Noughts and Crosses engine, see https://github.com/MrPiggyPegasus/norts.
+Copyright (c) 2023. "MrPiggyPegasus"
+This file is part of the "norts" Noughts and Crosses engine, see https://github.com/MrPiggyPegasus/norts.
 
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
- */
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 
 // board representation:
 // 1   2   4
@@ -26,9 +26,9 @@
 
 // or 2^x:
 
-// 0   1   3
-// 4   5   6
-// 7   8   9
+// 0   1   2
+// 3   4   5
+// 6   7   8
 
 /// Representation of the board using 2 u16 bitboards.
 pub struct Board {
@@ -58,7 +58,7 @@ impl Board {
     }
 
     pub fn last_move(&self) -> u8 {
-        self.move_history[(self.num_moves()-1) as usize]
+        self.move_history[(self.num_moves() - 1) as usize]
     }
 
     pub fn undo_move(&mut self) {
@@ -67,7 +67,11 @@ impl Board {
         }
         self.move_history[self.num_moves() as usize] = 10;
         if self.current_player() {
-            println!("{} , {}", (2 as u32).pow(self.last_move() as u32), self.o_bitboard);
+            println!(
+                "{} , {}",
+                (2 as u32).pow(self.last_move() as u32),
+                self.o_bitboard
+            );
             self.o_bitboard -= (2 as u32).pow(self.last_move() as u32) as u16
         } else {
             self.x_bitboard -= (2 as u32).pow(self.last_move() as u32) as u16
@@ -153,5 +157,12 @@ impl Board {
             }
         }
         return false;
+    }
+
+    pub fn is_legal(&self, square: u8) -> bool {
+        self.x_bitboard & (2 as u16).pow(square as u32)
+            != (2 as u16).pow(square as u32)
+            && (self.o_bitboard & (2 as u16).pow(square as u32))
+            != (2 as u16).pow(square as u32)
     }
 }
