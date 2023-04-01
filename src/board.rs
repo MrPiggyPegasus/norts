@@ -34,8 +34,6 @@ SOFTWARE.
 pub struct Board {
     pub x_bitboard: u16,
     pub o_bitboard: u16,
-    pub move_history: [u8; 9],
-    pub legal_moves: [bool; 9],
 }
 
 impl Board {
@@ -44,8 +42,15 @@ impl Board {
             x_bitboard: 0b000_0000_0000_0000,
             o_bitboard: 0b0000_0000_0000_0000,
             // If a slot is 10, the move has not been played
-            move_history: [10; 9],
-            legal_moves: [true; 9],
+        }
+    }
+
+    pub fn clear_square(&mut self, square: u8) {
+        if self.x_bitboard & (2 as u16).pow(square as u32) == (2 as u16).pow(square as u32) {
+            self.x_bitboard -= (2 as u16).pow(square as u32);
+        }
+        if self.o_bitboard & (2 as u16).pow(square as u32) == (2 as u16).pow(square as u32) {
+            self.o_bitboard -= (2 as u16).pow(square as u32);
         }
     }
 
@@ -57,30 +62,7 @@ impl Board {
         self.x_bitboard.count_ones() as u8 + self.o_bitboard.count_ones() as u8
     }
 
-    pub fn last_move(&self) -> u8 {
-        self.move_history[(self.num_moves() - 1) as usize]
-    }
-
-    pub fn undo_move(&mut self) {
-        if self.num_moves() < 1 {
-            return;
-        }
-        self.move_history[self.num_moves() as usize] = 10;
-        if self.current_player() {
-            println!(
-                "{} , {}",
-                (2 as u32).pow(self.last_move() as u32),
-                self.o_bitboard
-            );
-            self.o_bitboard -= (2 as u32).pow(self.last_move() as u32) as u16
-        } else {
-            self.x_bitboard -= (2 as u32).pow(self.last_move() as u32) as u16
-        }
-    }
-
     pub fn play(&mut self, square: u8) {
-        self.legal_moves[square as usize] = false;
-        self.move_history[self.num_moves() as usize] = square;
         if self.current_player() {
             self.x_bitboard |= (2 as u16).pow(square as u32)
         } else {
@@ -160,9 +142,7 @@ impl Board {
     }
 
     pub fn is_legal(&self, square: u8) -> bool {
-        self.x_bitboard & (2 as u16).pow(square as u32)
-            != (2 as u16).pow(square as u32)
-            && (self.o_bitboard & (2 as u16).pow(square as u32))
-            != (2 as u16).pow(square as u32)
+        self.x_bitboard & (2 as u16).pow(square as u32) != (2 as u16).pow(square as u32)
+            && (self.o_bitboard & (2 as u16).pow(square as u32)) != (2 as u16).pow(square as u32)
     }
 }

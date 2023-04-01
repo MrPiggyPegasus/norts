@@ -26,6 +26,10 @@ use board::Board;
 
 fn main() {
     let mut board = Board::new();
-    board.play(2);
-    println!("{} {}", board.is_legal(2), board.is_legal(3));
+    board.play(15);
+    board.play(4);
+    board.play(3);
+    board.show();
+    println!("{}", search::search(&mut board, i8::MIN, i8::MAX).0);
+    println!("{}", search::search(&mut board, i8::MIN, i8::MAX).1);
 }

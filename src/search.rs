@@ -19,50 +19,67 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use std::cmp::max;
-use crate::board;
+use crate::board::Board;
 
-/// Uses a strong solved minimax algorithm to search the tree.
+/// Uses a strong solved minimax algorithm with alpha-beta pruning
+/// to search the game tree.
 /// Moves are played and then undone to avoid the memory intense process
 /// of copying the board.
-pub fn search(pos: &mut board::Board, mut alpha: &mut i8, beta: &mut i8) -> i8 {
-    let eval = node_eval(pos);
-    if eval.1 {
-        return eval.0;
+pub fn search(pos: &mut Board, mut alpha: i8, mut beta: i8) -> (i8, u8) {
+    if pos.is_draw() {
+        return (0, 9);
     }
-    // if X is playing, a higher eval is favoured
-    if pos.current_player() {
-        let mut max_eval = &i8::MIN;
+    if pos.x_won() {
+        return (100 - (pos.num_moves() as i8), 9);
+    }
+    if pos.o_won() {
+        return (-100 + (pos.num_moves() as i8), 9);
+    }
+    // if X is playing, the engine wants to maximise the eval
+    return if pos.current_player() {
+        let mut max_eval = i8::MIN + 10;
+        let mut max_move:u8 = 9;
         for square in 0..9 {
             if !pos.is_legal(square) {
                 continue;
             }
             pos.play(square);
-            let eval = &search(pos, alpha, beta);
-            let max_eval = &mut max(max_eval, eval);
-            pos.undo_move();
-            if max_eval > &mut &*beta {
-                // beta cutoff
-                break;
+            let eval = search(pos, alpha, beta).0;
+            pos.clear_square(square);
+            if eval > max_eval {
+                max_eval = eval;
+                max_move = square;
+                if eval > beta {
+                    break;
+                }
+                if eval > alpha {
+                    alpha = eval;
+                }
             }
         }
-
-    }
-    0
-}
-
-/// Returns the eval + bool indicating whether or not the position is concluded.
-/// X plays the first move, so a positive score is better for X and a negative one
-/// is better for O, zero is a draw.
-/// The eval returned is moved closer to zero by every piece on the board, such that
-/// the engine prefers to win as quickly as possible.
-pub fn node_eval(pos: &board::Board) -> (i8, bool) {
-    if pos.x_won() {
-        return (100 - (pos.num_moves() as i8), true);
-    } else if pos.o_won() {
-        return (-100 + (pos.num_moves() as i8), true);
-    } else if pos.is_draw() {
-        return (0, true);
-    }
-    return (0, false);
+        (max_eval, max_move)
+    } else {
+        // if O is playing, the engine wants to minimise the eval
+        let mut min_eval = i8::MAX - 10;
+        let mut min_move:u8 = 9;
+        for square in 0..9 {
+            if !pos.is_legal(square) {
+                continue;
+            }
+            pos.play(square);
+            let eval = search(pos, alpha, beta).0;
+            pos.clear_square(square);
+            if eval < min_eval {
+                min_eval = eval;
+                min_move = square;
+                if eval < alpha {
+                    break;
+                }
+                if eval < beta {
+                    beta = eval;
+                }
+            }
+        }
+        (min_eval, min_move)
+    };
 }
