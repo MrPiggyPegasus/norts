@@ -22,44 +22,29 @@ SOFTWARE.
 use crate::board::Board;
 use std::io;
 
-pub fn play_against_engine(engine_player: i8) {
+pub fn play_against_engine(engine_player: i8, pgn: &str) {
     println!("\n\n\n");
-    let mut pos = Board::new();
-    if engine_player == -1 {
-        loop {
-            if !pos.is_in_play() {
-                break;
-            }
-            println!("{}", pos.pgn);
-            user_turn(&mut pos);
-            if !pos.is_in_play() {
-                break;
-            }
-            println!("{}", pos.pgn);
-            engine_turn(&mut pos);
+    let mut pos = Board::parse_pgn(pgn).unwrap();
+    loop {
+        if !pos.is_in_play() {
+            break;
         }
-    } else {
-        loop {
-            if !pos.is_in_play() {
-                break;
-            }
-            println!("{}", pos.pgn);
+        if pos.current_player() == engine_player {
             engine_turn(&mut pos);
-            if !pos.is_in_play() {
-                break;
-            }
-            println!("{}", pos.pgn);
+        } else {
             user_turn(&mut pos);
         }
     }
     println!("\n\nGame Over!");
     pos.show();
     match pos.evaluation() {
-        1  =>  println!("\nX won!\n"),
+        1 => println!("\nX won!\n"),
         -1 => println!("\nO won!\n"),
-        0  => println!("\nDraw!\n"),
+        0 => println!("\nDraw!\n"),
         _ => (),
     }
+    println!("Press enter to continue.");
+    io::stdin().read_line(&mut pos.pgn).unwrap();
 }
 
 pub fn engine_turn(pos: &mut Board) {
@@ -74,15 +59,15 @@ pub fn user_turn(pos: &mut Board) {
     loop {
         let mut square_str = String::new();
         if pos.current_player() == 1 {
-            println!("\nEnter move for O:");
-        } else {
             println!("\nEnter move for X:");
+        } else {
+            println!("\nEnter move for O:");
         }
         io::stdin().read_line(&mut square_str).expect("---");
         square_str.pop();
         if square_str.len() == 1 {
             if square_str.chars().next().unwrap().is_numeric() {
-                let square:i8 = square_str.parse().unwrap();
+                let square: i8 = square_str.parse().unwrap();
                 if pos.is_valid_move(square) {
                     pos.play(square).unwrap();
                     break;
@@ -107,7 +92,9 @@ pub fn menu() {
                 loop {
                     println!("\n\nShould the engine be X or O? (X goes first)");
                     let mut engine_player_choice = String::new();
-                    io::stdin().read_line(&mut engine_player_choice).expect("---");
+                    io::stdin()
+                        .read_line(&mut engine_player_choice)
+                        .expect("---");
                     if engine_player_choice.to_lowercase() == "x\n" {
                         engine_player = 1;
                         break;
@@ -116,8 +103,55 @@ pub fn menu() {
                         break;
                     }
                 }
-                play_against_engine(engine_player);
+                play_against_engine(engine_player, "");
                 break;
+            }
+
+            "2\n" => {
+                let mut pgn: String;
+                loop {
+                    pgn = String::new();
+                    println!("\n\nEnter starting PGN:");
+                    io::stdin().read_line(&mut pgn).expect("---");
+                    pgn.pop();
+                    if Board::is_valid_pgn(&pgn) {
+                        break;
+                    }
+                }
+                let engine_player: i8;
+                loop {
+                    println!("\n\nShould the engine be X or O? (X goes first)");
+                    let mut engine_player_choice = String::new();
+                    io::stdin()
+                        .read_line(&mut engine_player_choice)
+                        .expect("---");
+                    if engine_player_choice.to_lowercase() == "x\n" {
+                        engine_player = 1;
+                        break;
+                    } else if engine_player_choice.to_lowercase() == "o\n" {
+                        engine_player = -1;
+                        break;
+                    }
+                }
+                play_against_engine(engine_player, &*pgn);
+            }
+
+            "3\n" => {
+                let mut pgn: String;
+                loop {
+                    pgn = String::new();
+                    println!("\n\nEnter PGN:");
+                    io::stdin().read_line(&mut pgn).expect("---");
+                    pgn.pop();
+                    if Board::is_valid_pgn(&pgn) {
+                        break;
+                    }
+                }
+                let mut pos = Board::parse_pgn(&*pgn).unwrap();
+                pos.show();
+                println!("Best move: {}", pos.best_move().unwrap());
+                println!("\nPress enter to continue.");
+                io::stdin().read_line(&mut pgn).unwrap();
             }
 
             "4\n" => {

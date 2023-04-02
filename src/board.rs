@@ -21,8 +21,8 @@ SOFTWARE.
 
 // facade for bitboards::Bitboard to hide implementation details
 
+use std::fmt;
 use std::fmt::Formatter;
-use std::{fmt, io};
 
 use crate::bitboards::Bitboard;
 use crate::search::search;
@@ -81,7 +81,7 @@ impl Board {
     }
 
     pub fn is_valid_move(&self, square: i8) -> bool {
-        (square > 0 || square < 8) && self.bitboard.is_legal(square as u8) && self.is_in_play()
+        (square >= 0 && square < 9) && self.bitboard.is_legal(square as u8) && self.is_in_play()
     }
 
     pub fn is_valid_pgn(pgn: &str) -> bool {
@@ -103,6 +103,7 @@ impl Board {
     pub fn parse_pgn(pgn: &str) -> Result<Board, InvalidPgnError> {
         if Board::is_valid_pgn(pgn) {
             let mut pos = Board::new();
+
             for c in pgn.chars() {
                 if c.is_numeric() {
                     if (c.to_string().parse::<i8>().unwrap()) < 9 {
@@ -142,7 +143,7 @@ impl Board {
 
     pub fn current_player(&self) -> i8 {
         // converts bool to 1 / -1
-        (self.bitboard.current_player() as i8 * -2) + 1
+        -((self.bitboard.current_player() as i8 * -2) + 1)
     }
 
     pub fn show(&self) {

@@ -27,5 +27,5 @@ mod play;
 mod search;
 
 fn main() {
-    play::menu();
+    play::menu()
 }
