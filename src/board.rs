@@ -19,130 +19,156 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-// board representation:
-// 1   2   4
-// 8   16  32
-// 64  128 256
+// facade for bitboards::Bitboard to hide implementation details
 
-// or 2^x:
+use std::fmt::Formatter;
+use std::{fmt, io};
 
-// 0   1   2
-// 3   4   5
-// 6   7   8
+use crate::bitboards::Bitboard;
+use crate::search::search;
 
-/// Representation of the board using 2 u16 bitboards.
+#[derive(Debug, Clone)]
+pub struct PositionAlreadyConcludedError;
+
+impl fmt::Display for PositionAlreadyConcludedError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            " The position cannot be analysed as it has already concluded."
+        )
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct InvalidPgnError;
+
+impl fmt::Display for InvalidPgnError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, " PGN is invalid.")
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct IllegalMoveError;
+
+impl fmt::Display for IllegalMoveError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, " Move is illegal.")
+    }
+}
+
 pub struct Board {
-    pub x_bitboard: u16,
-    pub o_bitboard: u16,
+    pub bitboard: Bitboard,
+    pub pgn: String,
 }
 
 impl Board {
     pub fn new() -> Board {
         Board {
-            x_bitboard: 0b000_0000_0000_0000,
-            o_bitboard: 0b0000_0000_0000_0000,
-            // If a slot is 10, the move has not been played
+            bitboard: Bitboard::new(),
+            pgn: String::new(),
         }
     }
 
-    pub fn clear_square(&mut self, square: u8) {
-        if self.x_bitboard & (2 as u16).pow(square as u32) == (2 as u16).pow(square as u32) {
-            self.x_bitboard -= (2 as u16).pow(square as u32);
+    pub fn evaluation(&self) -> i8 {
+        if self.bitboard.x_won() {
+            return 1;
         }
-        if self.o_bitboard & (2 as u16).pow(square as u32) == (2 as u16).pow(square as u32) {
-            self.o_bitboard -= (2 as u16).pow(square as u32);
+        if self.bitboard.o_won() {
+            return -1;
         }
+        0
     }
 
-    pub fn current_player(&self) -> bool {
-        self.x_bitboard.count_ones() <= self.o_bitboard.count_ones()
+    pub fn is_valid_move(&self, square: i8) -> bool {
+        (square > 0 || square < 8) && self.bitboard.is_legal(square as u8) && self.is_in_play()
     }
 
-    pub fn num_moves(&self) -> u8 {
-        self.x_bitboard.count_ones() as u8 + self.o_bitboard.count_ones() as u8
+    pub fn is_valid_pgn(pgn: &str) -> bool {
+        let mut pos = Board::new();
+        for c in pgn.chars() {
+            if c.is_numeric() {
+                if pos.is_valid_move(c.to_string().parse::<i8>().unwrap()) {
+                    pos.play(c.to_string().parse::<i8>().unwrap()).unwrap();
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        true
     }
 
-    pub fn play(&mut self, square: u8) {
-        if self.current_player() {
-            self.x_bitboard |= (2 as u16).pow(square as u32)
+    pub fn parse_pgn(pgn: &str) -> Result<Board, InvalidPgnError> {
+        if Board::is_valid_pgn(pgn) {
+            let mut pos = Board::new();
+            for c in pgn.chars() {
+                if c.is_numeric() {
+                    if (c.to_string().parse::<i8>().unwrap()) < 9 {
+                        pos.play(c.to_string().parse::<i8>().unwrap()).unwrap();
+                    }
+                } else {
+                    ()
+                }
+            }
+            Ok(pos)
         } else {
-            self.o_bitboard |= (2 as u16).pow(square as u32)
+            Err(InvalidPgnError)
         }
+    }
+
+    pub fn play(&mut self, square: i8) -> Result<bool, IllegalMoveError> {
+        if self.is_valid_move(square) {
+            self.bitboard.play(square as u8);
+            self.pgn += &*square.to_string();
+            Ok(true)
+        } else {
+            Err(IllegalMoveError)
+        }
+    }
+
+    pub fn is_in_play(&self) -> bool {
+        !(self.bitboard.x_won() || self.bitboard.o_won() || self.bitboard.is_draw())
+    }
+
+    pub fn best_move(&mut self) -> Result<i8, PositionAlreadyConcludedError> {
+        if self.is_in_play() {
+            Ok(search(&mut self.bitboard, i8::MIN, i8::MAX).1 as i8)
+        } else {
+            Err(PositionAlreadyConcludedError)
+        }
+    }
+
+    pub fn current_player(&self) -> i8 {
+        // converts bool to 1 / -1
+        (self.bitboard.current_player() as i8 * -2) + 1
     }
 
     pub fn show(&self) {
+        println!("*-----------------------*");
+        println!(" Board:         Squares:");
         for row in 0..3 {
             for col in 0..3 {
-                if (self.x_bitboard & (2 as u16).pow((row * 3) + col))
+                if (self.bitboard.x_bitboard & (2 as u16).pow((row * 3) + col))
                     == (2 as u16).pow((row * 3) + col)
                 {
-                    print!("X  ");
-                } else if (self.o_bitboard & (2 as u16).pow((row * 3) + col))
+                    print!(" X ");
+                } else if (self.bitboard.o_bitboard & (2 as u16).pow((row * 3) + col))
                     == (2 as u16).pow((row * 3) + col)
                 {
-                    print!("O  ");
+                    print!(" O ");
                 } else {
-                    print!(".  ");
+                    print!(" . ");
                 }
             }
-            println!();
+            println!(
+                "       {}  {}  {}  ",
+                (row * 3),
+                (row * 3) + 1,
+                (row * 3) + 2
+            );
         }
-    }
-
-    pub fn is_draw(&self) -> bool {
-        self.x_bitboard | self.o_bitboard == 0b0000_0001_1111_1111
-    }
-
-    pub fn o_won(&self) -> bool {
-        // check diagonals by matching bit patterns
-        if self.o_bitboard & 0b0000_0001_0001_0001 == 0b0000_0001_0001_0001 {
-            return true;
-        }
-        if self.o_bitboard & 0b0000_0000_0101_0100 == 0b0000_0001_0001_0001 {
-            return true;
-        }
-
-        for row in 0..3 {
-            // check horizontals
-            if self.o_bitboard & 0b0000_0000_0000_0111 << (row * 3)
-                == 0b0000_0000_0000_0101 << (row * 3)
-            {
-                return true;
-            }
-            // check verticals
-            if self.o_bitboard & 0b0000_0000_0100_1001 << row == 0b0000_0000_0100_1001 << row {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    pub fn x_won(&self) -> bool {
-        // check diagonals by matching bit patterns
-        if self.x_bitboard & 0b0000_0001_0001_0001 == 0b0000_0001_0001_0001 {
-            return true;
-        }
-        if self.x_bitboard & 0b0000_0000_0101_0100 == 0b0000_0001_0001_0001 {
-            return true;
-        }
-
-        for row in 0..3 {
-            // check horizontals
-            if self.x_bitboard & 0b0000_0000_0000_0111 << (row * 3)
-                == 0b0000_0000_0000_0111 << (row * 3)
-            {
-                return true;
-            }
-            // check verticals
-            if self.x_bitboard & 0b0000_0000_0100_1001 << row == 0b0000_0000_0100_1001 << row {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    pub fn is_legal(&self, square: u8) -> bool {
-        self.x_bitboard & (2 as u16).pow(square as u32) != (2 as u16).pow(square as u32)
-            && (self.o_bitboard & (2 as u16).pow(square as u32)) != (2 as u16).pow(square as u32)
+        println!("*-----------------------*");
     }
 }

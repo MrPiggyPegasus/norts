@@ -19,13 +19,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::board::Board;
+use crate::bitboards::Bitboard;
 
 /// Uses a strong solved minimax algorithm with alpha-beta pruning
 /// to search the game tree.
 /// Moves are played and then undone to avoid the memory intense process
 /// of copying the board.
-pub fn search(pos: &mut Board, mut alpha: i8, mut beta: i8) -> (i8, u8) {
+pub fn search(pos: &mut Bitboard, mut alpha: i8, mut beta: i8) -> (i8, u8) {
     if pos.is_draw() {
         return (0, 9);
     }
@@ -38,7 +38,7 @@ pub fn search(pos: &mut Board, mut alpha: i8, mut beta: i8) -> (i8, u8) {
     // if X is playing, the engine wants to maximise the eval
     return if pos.current_player() {
         let mut max_eval = i8::MIN + 10;
-        let mut max_move:u8 = 9;
+        let mut max_move: u8 = 9;
         for square in 0..9 {
             if !pos.is_legal(square) {
                 continue;
@@ -61,7 +61,7 @@ pub fn search(pos: &mut Board, mut alpha: i8, mut beta: i8) -> (i8, u8) {
     } else {
         // if O is playing, the engine wants to minimise the eval
         let mut min_eval = i8::MAX - 10;
-        let mut min_move:u8 = 9;
+        let mut min_move: u8 = 9;
         for square in 0..9 {
             if !pos.is_legal(square) {
                 continue;

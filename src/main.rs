@@ -19,17 +19,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::board::Board;
+
+mod bitboards;
 mod board;
+mod play;
 mod search;
 
-use board::Board;
-
 fn main() {
-    let mut board = Board::new();
-    board.play(15);
-    board.play(4);
-    board.play(3);
-    board.show();
-    println!("{}", search::search(&mut board, i8::MIN, i8::MAX).0);
-    println!("{}", search::search(&mut board, i8::MIN, i8::MAX).1);
+    play::menu();
 }
