@@ -60,7 +60,6 @@ pub fn play_against_engine(engine_player: i8) {
         0  => println!("\nDraw!\n"),
         _ => (),
     }
-
 }
 
 pub fn engine_turn(pos: &mut Board) {
@@ -85,7 +84,7 @@ pub fn user_turn(pos: &mut Board) {
             if square_str.chars().next().unwrap().is_numeric() {
                 let square:i8 = square_str.parse().unwrap();
                 if pos.is_valid_move(square) {
-                    pos.play(square).expect("TODO: panic message");
+                    pos.play(square).unwrap();
                     break;
                 }
             }
@@ -99,11 +98,12 @@ pub fn menu() {
         println!("[1] - Play against engine");
         println!("[2] - Play from PGN");
         println!("[3] - Find the best move from PGN\n");
+        println!("[4] - Exit");
         let mut choice = String::new();
         io::stdin().read_line(&mut choice).expect("---");
         match &choice as &str {
             "1\n" => {
-                let mut engine_player: i8 = 1;
+                let engine_player: i8;
                 loop {
                     println!("\n\nShould the engine be X or O? (X goes first)");
                     let mut engine_player_choice = String::new();
@@ -117,6 +117,10 @@ pub fn menu() {
                     }
                 }
                 play_against_engine(engine_player);
+                break;
+            }
+
+            "4\n" => {
                 break 'total;
             }
 
