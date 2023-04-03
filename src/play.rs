@@ -19,8 +19,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::board::Board;
 use std::io;
+use std::process::exit;
+
+use crate::board::Board;
 
 pub fn play_against_engine(engine_player: i8, pgn: &str) {
     println!("\n\n\n");
@@ -78,7 +80,7 @@ pub fn user_turn(pos: &mut Board) {
 }
 
 pub fn menu() {
-    'total: loop {
+    loop {
         println!("\n\n\n\nnorts.\n\n");
         println!("[1] - Play against engine");
         println!("[2] - Play from PGN");
@@ -155,7 +157,7 @@ pub fn menu() {
             }
 
             "4\n" => {
-                break 'total;
+                exit(0);
             }
 
             _ => {}
