@@ -26,14 +26,14 @@ use crate::bitboards::Bitboard;
 /// Moves are played and then undone to avoid the memory intense process
 /// of copying the board.
 pub fn search(pos: &mut Bitboard, mut alpha: i8, mut beta: i8) -> (i8, u8) {
-    if pos.is_draw() {
-        return (0, 9);
-    }
     if pos.x_won() {
         return (100 - (pos.num_moves() as i8), 9);
     }
     if pos.o_won() {
         return (-100 + (pos.num_moves() as i8), 9);
+    }
+    if pos.is_draw() {
+        return (0, 9);
     }
     // if X is playing, the engine wants to maximise the eval
     return if pos.current_player() {
@@ -46,7 +46,7 @@ pub fn search(pos: &mut Bitboard, mut alpha: i8, mut beta: i8) -> (i8, u8) {
             pos.play(square);
             let eval = search(pos, alpha, beta).0;
             pos.clear_square(square);
-            if eval > max_eval {
+            if eval >= max_eval {
                 max_eval = eval;
                 max_move = square;
                 if eval > beta {
@@ -72,7 +72,7 @@ pub fn search(pos: &mut Bitboard, mut alpha: i8, mut beta: i8) -> (i8, u8) {
             if eval < min_eval {
                 min_eval = eval;
                 min_move = square;
-                if eval < alpha {
+                if eval <= alpha {
                     break;
                 }
                 if eval < beta {

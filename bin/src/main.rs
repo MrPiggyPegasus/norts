@@ -19,12 +19,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::board::Board;
+use norts::board::Board;
 
-mod bitboards;
-mod board;
 mod play;
-mod search;
 
 fn main() {
     play::menu()

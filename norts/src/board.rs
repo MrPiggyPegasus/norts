@@ -23,6 +23,7 @@ SOFTWARE.
 
 use std::fmt;
 use std::fmt::Formatter;
+use std::ptr::addr_of;
 
 use crate::bitboards::Bitboard;
 use crate::search::search;
@@ -56,7 +57,6 @@ impl fmt::Display for IllegalMoveError {
         write!(f, " Move is illegal.")
     }
 }
-
 pub struct Board {
     pub bitboard: Bitboard,
     pub pgn: String,
