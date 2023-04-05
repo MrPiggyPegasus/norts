@@ -24,5 +24,7 @@ use norts::board::Board;
 mod play;
 
 fn main() {
-    play::menu()
+    loop {
+        play::menu()
+    }
 }
