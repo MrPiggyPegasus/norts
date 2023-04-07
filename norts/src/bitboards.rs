@@ -31,6 +31,8 @@ SOFTWARE.
 // 6   7   8
 
 /// Representation of the board using 2 u16 bitboards.
+/// This does not include any safety features and as such may panic,
+/// so dont use this unless you know what you are doing
 pub struct Bitboard {
     pub x_bitboard: u16,
     pub o_bitboard: u16,

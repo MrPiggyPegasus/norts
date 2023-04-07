@@ -39,7 +39,7 @@ pub fn play_against_engine(engine_player: i8, pgn: &str) {
     }
     println!("\n\nGame Over!");
     pos.show();
-    match pos.evaluation() {
+    match pos.situation() {
         1 => println!("\nX won!\n"),
         -1 => println!("\nO won!\n"),
         0 => println!("\nDraw!\n"),

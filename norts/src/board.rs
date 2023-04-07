@@ -19,7 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-// facade for bitboards::Bitboard to hide implementation details
+
 
 use std::fmt;
 use std::fmt::Formatter;
@@ -56,12 +56,18 @@ impl fmt::Display for IllegalMoveError {
         write!(f, " Move is illegal.")
     }
 }
+
+/// The main representation of the board for end user interaction.
+/// See methods for usage.
 pub struct Board {
+    /// Binary representation of the position used to optimise performance.
     pub bitboard: Bitboard,
+    ///
     pub pgn: String,
 }
 
 impl Board {
+    /// Returns a fresh board in the starting position.
     pub fn new() -> Board {
         Board {
             bitboard: Bitboard::new(),
@@ -69,7 +75,11 @@ impl Board {
         }
     }
 
-    pub fn evaluation(&self) -> i8 {
+    /// Returns:
+    /// * 1 if X has won
+    /// * -1 if O has won
+    /// * 0 if the game is ongoing or is a draw
+    pub fn situation(&self) -> i8 {
         if self.bitboard.x_won() {
             return 1;
         }
@@ -79,10 +89,30 @@ impl Board {
         0
     }
 
+    /// Returns a bool indication whether or not a certain move is possible in the position
+    ///
     pub fn is_valid_move(&self, square: i8) -> bool {
         (square >= 0 && square < 9) && self.bitboard.is_legal(square as u8) && self.is_in_play()
     }
 
+    /// Tests if a PGN is valid
+    ///
+    /// ## PGN
+    /// To save a certain position or game, you can use the PGN or Portable Game Notation format.
+    /// A PGN is a simple concatenation of moves notated in the above manner,
+    /// such that "042" yields the following position:
+    ///
+    ///     X  .  X
+    ///     .  O  .
+    ///     .  .  .
+    ///``` ignore
+    /// use crate::norts::board::Board;
+    ///
+    /// fn main() {
+    ///    let mut pos = Board::parse_pgn("172");
+    ///    pos.show();
+    /// }
+    /// ```
     pub fn is_valid_pgn(pgn: &str) -> bool {
         let mut pos = Board::new();
         for c in pgn.chars() {
@@ -99,6 +129,24 @@ impl Board {
         true
     }
 
+    /// Returns a board object which picks up from the specified PGN string.
+    ///
+    /// ## PGN
+    /// To save a certain position or game, you can use the PGN or Portable Game Notation format.
+    /// A PGN is a simple concatenation of moves notated in the above manner,
+    /// such that "042" yields the following position:
+    ///
+    ///     X  .  X
+    ///     .  O  .
+    ///     .  .  .
+    ///``` ignore
+    /// use crate::norts::board::Board;
+    ///
+    /// fn main() {
+    ///    let mut pos = Board::parse_pgn("172");
+    ///    pos.show();
+    /// }
+    /// ```
     pub fn parse_pgn(pgn: &str) -> Result<Board, InvalidPgnError> {
         if Board::is_valid_pgn(pgn) {
             let mut pos = Board::new();
@@ -118,6 +166,28 @@ impl Board {
         }
     }
 
+    /// Plays a move to the certain square.
+    ///
+    /// ## Move Notation
+    /// Every square is applied a number by this grid:
+    ///
+    ///     0  1  2
+    ///     3  4  5
+    ///     6  7  8
+    /// A move is notated by the square on which a piece is placed, X goes first.
+    /// The following example creates a board and plays some moves:
+    /// ``` ignore
+    /// use crate::norts::board::Board;
+    ///
+    /// fn main() {
+    ///     let mut pos = Board::new();
+    ///     pos.play(0).unwrap();
+    ///     pos.play(4).unwrap();
+    ///     pos.play(2).unwrap();
+    ///     pos.show();
+    ///     println!("Best move: {}", pos.best_move().unwrap());
+    /// }
+    ///  ```
     pub fn play(&mut self, square: i8) -> Result<bool, IllegalMoveError> {
         if self.is_valid_move(square) {
             self.bitboard.play(square as u8);
@@ -128,10 +198,12 @@ impl Board {
         }
     }
 
+    /// Returns a bool indicating whether or not the game has ended.
     pub fn is_in_play(&self) -> bool {
         !(self.bitboard.x_won() || self.bitboard.o_won() || self.bitboard.is_draw())
     }
 
+    /// Returns the best move in the position.
     pub fn best_move(&mut self) -> Result<i8, PositionAlreadyConcludedError> {
         if self.is_in_play() {
             Ok(search(&mut self.bitboard, i8::MIN, i8::MAX).1 as i8)
@@ -145,6 +217,7 @@ impl Board {
         -((self.bitboard.current_player() as i8 * -2) + 1)
     }
 
+    /// Displays a visual representation of the board to the standard output.
     pub fn show(&self) {
         println!("*-----------------------*");
         println!(" Board:         Squares:");
