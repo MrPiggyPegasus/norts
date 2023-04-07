@@ -7,6 +7,7 @@ keywords = ["ai", "tictactoe",]
 publish = true
 homepage = "https://github.com/MrPiggyPegasus/norts"
 description = "A Noughts and Crosses/Tic Tac Toe library for move generation and an inbuilt hyper-fast solver."
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
