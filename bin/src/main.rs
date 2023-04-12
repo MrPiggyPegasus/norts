@@ -24,15 +24,6 @@ use norts::Board;
 mod play;
 
 fn main() {
-    let mut pos = Board::new();
-    pos.play(3);
-    pos.play(2);
-    pos.play(1);
-    println!("{}", pos.pgn);
-    pos.show();
-    pos.undo_move();
-    println!("{}", pos.pgn);
-    pos.show();
     loop {
         play::menu()
     }
