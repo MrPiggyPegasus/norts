@@ -20,7 +20,7 @@ SOFTWARE.
 */
 use std::io;
 use std::process::exit;
-use norts::board::Board;
+use norts::Board;
 
 pub fn play_against_engine(engine_player: i8, pgn: &str) {
     println!("\n\n\n");

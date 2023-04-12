@@ -1,3 +1,5 @@
-pub mod bitboards;
-pub mod board;
-pub mod search;
+mod bitboards;
+mod board;
+mod search;
+
+pub use board::Board;
