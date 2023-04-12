@@ -19,8 +19,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
-
 use std::fmt;
 use std::fmt::Formatter;
 
@@ -34,7 +32,7 @@ impl fmt::Display for PositionAlreadyConcludedError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            " The position cannot be analysed as it has already concluded."
+            "The position cannot be analysed as it has already concluded."
         )
     }
 }
@@ -44,7 +42,7 @@ pub struct InvalidPgnError;
 
 impl fmt::Display for InvalidPgnError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, " PGN is invalid.")
+        write!(f, "PGN is invalid.")
     }
 }
 
@@ -53,10 +51,18 @@ pub struct IllegalMoveError;
 
 impl fmt::Display for IllegalMoveError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, " Move is illegal.")
+        write!(f, "Move is illegal.")
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct NoMoveToUndoError;
+
+impl fmt::Display for NoMoveToUndoError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "No move to undo!")
+    }
+}
 /// The main representation of the board for end user interaction.
 /// See methods for usage.
 pub struct Board {
@@ -73,6 +79,24 @@ impl Board {
             bitboard: Bitboard::new(),
             pgn: String::new(),
         }
+    }
+
+    /// Undoes the last move that was played
+    pub fn undo_move(&mut self) -> Result<(), NoMoveToUndoError> {
+        if self.pgn.len() == 0 {
+            return Err(NoMoveToUndoError);
+        }
+        self.bitboard.clear_square(
+            self.pgn
+                .chars()
+                .nth(self.pgn.len() - 1)
+                .unwrap()
+                .to_string()
+                .parse()
+                .unwrap(),
+        );
+        self.pgn.truncate(self.pgn.len() - 1);
+        Ok(())
     }
 
     /// Returns:
@@ -92,7 +116,7 @@ impl Board {
     /// Returns a bool indication whether or not a certain move is possible in the position
     ///
     pub fn is_valid_move(&self, square: i8) -> bool {
-        (square >= 0 && square < 9) && self.bitboard.is_legal(square as u8) && self.is_in_play()
+        square >= 0 && square < 9 && self.bitboard.is_legal(square as u8) && self.is_in_play()
     }
 
     /// Tests if a PGN is valid
