@@ -174,7 +174,6 @@ impl Board {
     pub fn parse_pgn(pgn: &str) -> Result<Board, InvalidPgnError> {
         if Board::is_valid_pgn(pgn) {
             let mut pos = Board::new();
-
             for c in pgn.chars() {
                 if c.is_numeric() {
                     if (c.to_string().parse::<i8>().unwrap()) < 9 {

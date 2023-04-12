@@ -30,11 +30,9 @@ pub fn play_against_engine(engine_player: i8, pgn: &str) {
             break;
         }
         if pos.current_player() == engine_player {
-            println!("{}", pos.pgn);
             engine_turn(&mut pos);
         } else {
             user_turn(&mut pos);
-            println!("{}", pos.pgn);
         }
     }
     println!("\n\nGame Over!");
@@ -50,7 +48,6 @@ pub fn play_against_engine(engine_player: i8, pgn: &str) {
 }
 
 pub fn engine_turn(pos: &mut Board) {
-    println!("Calculating...");
     let best_move = pos.best_move().unwrap();
     pos.play(best_move).unwrap();
     println!("Engine's move: {}\n", best_move);

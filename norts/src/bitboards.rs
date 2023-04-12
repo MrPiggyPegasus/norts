@@ -32,7 +32,7 @@ SOFTWARE.
 
 /// Representation of the board using 2 u16 bitboards.
 /// This does not include any safety features and as such may panic,
-/// so dont use this unless you know what you are doing
+/// so dont use this unless you know what you are doing.
 pub struct Bitboard {
     pub x_bitboard: u16,
     pub o_bitboard: u16,
@@ -43,39 +43,45 @@ impl Bitboard {
         Bitboard {
             x_bitboard: 0b000_0000_0000_0000,
             o_bitboard: 0b0000_0000_0000_0000,
-            // If a slot is 10, the move has not been played
         }
     }
 
+    #[inline(always)]
     pub fn clear_square(&mut self, square: u8) {
-        if self.x_bitboard & (2 as u16).pow(square as u32) == (2 as u16).pow(square as u32) {
-            self.x_bitboard -= (2 as u16).pow(square as u32);
+        if self.x_bitboard & (1 << square) == (1 << square) {
+            self.x_bitboard -= 1 << square
         }
-        if self.o_bitboard & (2 as u16).pow(square as u32) == (2 as u16).pow(square as u32) {
-            self.o_bitboard -= (2 as u16).pow(square as u32);
+        if self.o_bitboard & (1 << square) == 1 << square {
+            self.o_bitboard -= 1 << square
         }
     }
 
+    #[inline(always)]
     pub fn current_player(&self) -> bool {
         self.x_bitboard.count_ones() <= self.o_bitboard.count_ones()
     }
 
+
+    #[inline(always)]
     pub fn num_moves(&self) -> u8 {
-        self.x_bitboard.count_ones() as u8 + self.o_bitboard.count_ones() as u8
+        (self.x_bitboard.count_ones() + self.o_bitboard.count_ones()) as u8
     }
 
+    #[inline(always)]
     pub fn play(&mut self, square: u8) {
         if self.current_player() {
-            self.x_bitboard |= (2 as u16).pow(square as u32)
+            self.x_bitboard |= 1 << square
         } else {
-            self.o_bitboard |= (2 as u16).pow(square as u32)
+            self.o_bitboard |= 1 << square
         }
     }
 
+    #[inline(always)]
     pub fn is_draw(&self) -> bool {
         self.x_bitboard | self.o_bitboard == 0b0000_0001_1111_1111
     }
 
+    #[inline(always)]
     pub fn o_won(&self) -> bool {
         // check diagonals by matching bit patterns
         if self.o_bitboard & 0b0000_0001_0001_0001 == 0b0000_0001_0001_0001 {
@@ -100,6 +106,7 @@ impl Bitboard {
         return false;
     }
 
+    #[inline(always)]
     pub fn x_won(&self) -> bool {
         // check diagonals by matching bit patterns
         if self.x_bitboard & 0b0000_0001_0001_0001 == 0b0000_0001_0001_0001 {
@@ -124,8 +131,9 @@ impl Bitboard {
         return false;
     }
 
+    #[inline(always)]
     pub fn is_legal(&self, square: u8) -> bool {
-        self.x_bitboard & (2 as u16).pow(square as u32) != (2 as u16).pow(square as u32)
-            && (self.o_bitboard & (2 as u16).pow(square as u32)) != (2 as u16).pow(square as u32)
+        self.x_bitboard & (1 << square) != 1 << square
+            && (self.o_bitboard & (1 << square)) != 1 << square
     }
 }
