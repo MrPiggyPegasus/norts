@@ -240,18 +240,35 @@ impl Board {
         -((self.bitboard.current_player() as i8 * -2) + 1)
     }
 
+    pub fn to_string(&self) -> String {
+        let mut out = String::new();
+        for row in 0..3 {
+            for col in 0..3 {
+                if (self.bitboard.x_bitboard & (1 << ((row * 3) + col))) == 1 << ((row * 3) + col) {
+                    out += " X "
+                } else if (self.bitboard.o_bitboard & (1 << ((row * 3) + col)))
+                    == 1 << ((row * 3) + col)
+                {
+                    out += " O "
+                } else {
+                    out += " . "
+                }
+            }
+            out += "\n"
+        }
+        out
+    }
+
     /// Displays a visual representation of the board to the standard output.
     pub fn show(&self) {
         println!("*-----------------------*");
         println!(" Board:         Squares:");
         for row in 0..3 {
             for col in 0..3 {
-                if (self.bitboard.x_bitboard & (2 as u16).pow((row * 3) + col))
-                    == (2 as u16).pow((row * 3) + col)
-                {
+                if (self.bitboard.x_bitboard & (1 << ((row * 3) + col))) == 1 << ((row * 3) + col) {
                     print!(" X ");
-                } else if (self.bitboard.o_bitboard & (2 as u16).pow((row * 3) + col))
-                    == (2 as u16).pow((row * 3) + col)
+                } else if (self.bitboard.o_bitboard & (1 << ((row * 3) + col)))
+                    == (1 << ((row * 3) + col))
                 {
                     print!(" O ");
                 } else {
